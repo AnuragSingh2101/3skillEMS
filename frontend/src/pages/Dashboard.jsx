@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, Ticket, Users, Calendar, Plus, X, BarChart3, PieChart, TrendingUp, Sparkles } from 'lucide-react';
 
-const Dashboard = ({ token, backendUrl }) => {
+const Dashboard = ({ user, token, backendUrl }) => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -141,6 +141,68 @@ const Dashboard = ({ token, backendUrl }) => {
           <Plus size={18} />
           <span>Create New Event</span>
         </button>
+      </div>
+
+      {/* User Profile Card */}
+      <div className="glass-card mb-6" style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1.5rem',
+        padding: '1.5rem',
+        borderRadius: '16px',
+        background: 'rgba(255, 255, 255, 0.03)',
+        border: '1px solid var(--surface-border)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {/* Subtle background glow for the profile card */}
+        <div style={{
+          position: 'absolute',
+          top: '-50%',
+          left: '-10%',
+          width: '150px',
+          height: '150px',
+          background: 'rgba(168, 85, 247, 0.15)',
+          filter: 'blur(40px)',
+          borderRadius: '50%',
+          pointerEvents: 'none'
+        }} />
+        <div style={{
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          background: 'var(--primary-gradient)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '1.5rem',
+          fontWeight: 700,
+          color: '#fff',
+          textShadow: '0 2px 4px rgba(0,0,0,0.2)',
+          boxShadow: '0 4px 12px rgba(168, 85, 247, 0.3)',
+          zIndex: 1
+        }}>
+          {user?.name?.charAt(0).toUpperCase() || 'O'}
+        </div>
+        <div style={{ flex: 1, zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>{user?.name || 'Organizer'}</h2>
+            <span style={{
+              background: 'rgba(168, 85, 247, 0.15)',
+              color: '#c084fc',
+              fontSize: '0.7rem',
+              fontWeight: 600,
+              padding: '0.15rem 0.6rem',
+              borderRadius: '20px',
+              border: '1px solid rgba(168, 85, 247, 0.3)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>
+              {user?.role || 'Organizer'}
+            </span>
+          </div>
+          <p style={{ color: 'var(--text-muted)', margin: '0.2rem 0 0 0', fontSize: '0.85rem' }}>{user?.email || 'organizer@evently.com'}</p>
+        </div>
       </div>
 
       {/* Overview Cards Grid */}

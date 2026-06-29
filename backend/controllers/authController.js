@@ -9,6 +9,48 @@ const generateToken = (id) => {
   });
 };
 
+const validateEmail = (emailStr) => {
+  if (!emailStr) return false;
+  // 1. Basic format validation
+  const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!regex.test(emailStr)) return false;
+
+  const domain = emailStr.split('@')[1].toLowerCase();
+  
+  // 2. Reject common fake provider variations (e.g., gmailXXXX, yahooXXXX)
+  const commonProviders = ['gmail', 'yahoo', 'hotmail', 'outlook', 'icloud', 'protonmail', 'proton'];
+  for (const provider of commonProviders) {
+    if (domain.includes(provider)) {
+      const isExact = domain === `${provider}.com` || 
+                      domain === `${provider}.co` || 
+                      domain.endsWith(`.${provider}.com`) || 
+                      domain.endsWith(`.${provider}.co`) || 
+                      domain.endsWith(`.${provider}.org`) || 
+                      domain === `${provider}.co.in` || 
+                      domain === `${provider}.net` ||
+                      domain === `${provider}.me` ||
+                      domain === `${provider}.org`;
+      if (!isExact) {
+        return false;
+      }
+    }
+  }
+
+  // 3. Reject obviously random domains (e.g., domains containing 4 or more consecutive digits)
+  if (/\d{4,}/.test(domain)) {
+    return false;
+  }
+
+  // 4. Require a valid TLD (alphabetic only, length 2 to 6)
+  const parts = domain.split('.');
+  const tld = parts[parts.length - 1];
+  if (!/^[a-z]{2,6}$/.test(tld)) {
+    return false;
+  }
+
+  return true;
+};
+
 
 exports.registerUser = async (req, res) => {
   try {
@@ -16,6 +58,10 @@ exports.registerUser = async (req, res) => {
 
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, message: 'Please add all fields' });
+    }
+
+    if (!validateEmail(email)) {
+      return res.status(400).json({ success: false, message: 'Please enter a valid, original email address (e.g. name@gmail.com). Disposable or fake domains are not allowed.' });
     }
 
     const isMock = process.env.USE_MOCK_DB === 'true';

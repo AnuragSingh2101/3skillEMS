@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Mail, Lock, UserPlus, AlertCircle } from 'lucide-react';
+import { User, Mail, Lock, UserPlus, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 const Register = ({ onLoginSuccess, backendUrl }) => {
   const [name, setName] = useState('');
@@ -9,12 +9,59 @@ const Register = ({ onLoginSuccess, backendUrl }) => {
   const [role, setRole] = useState('attendee');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
+  const validateEmail = (emailStr) => {
+    // 1. Basic format validation
+    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!regex.test(emailStr)) return false;
+
+    const domain = emailStr.split('@')[1].toLowerCase();
+    
+    // 2. Reject common fake provider variations (e.g., gmailXXXX, yahooXXXX)
+    const commonProviders = ['gmail', 'yahoo', 'hotmail', 'outlook', 'icloud', 'protonmail', 'proton'];
+    for (const provider of commonProviders) {
+      if (domain.includes(provider)) {
+        const isExact = domain === `${provider}.com` || 
+                        domain === `${provider}.co` || 
+                        domain.endsWith(`.${provider}.com`) || 
+                        domain.endsWith(`.${provider}.co`) || 
+                        domain.endsWith(`.${provider}.org`) || 
+                        domain === `${provider}.co.in` || 
+                        domain === `${provider}.net` ||
+                        domain === `${provider}.me` ||
+                        domain === `${provider}.org`;
+        if (!isExact) {
+          return false;
+        }
+      }
+    }
+
+    // 3. Reject obviously random domains (e.g., domains containing 4 or more consecutive digits)
+    if (/\d{4,}/.test(domain)) {
+      return false;
+    }
+
+    // 4. Require a valid TLD (alphabetic only, length 2 to 6)
+    const parts = domain.split('.');
+    const tld = parts[parts.length - 1];
+    if (!/^[a-z]{2,6}$/.test(tld)) {
+      return false;
+    }
+
+    return true;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !email || !password || !role) {
       setError('Please fill in all fields');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setError('Please enter a valid, original email address (e.g. name@gmail.com). Disposable or fake domains are not allowed.');
       return;
     }
 
@@ -106,14 +153,35 @@ const Register = ({ onLoginSuccess, backendUrl }) => {
             <div style={{ position: 'relative' }}>
               <Lock size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 className="form-input"
-                style={{ paddingLeft: '2.75rem' }}
+                style={{ paddingLeft: '2.75rem', paddingRight: '2.75rem' }}
                 placeholder="Min. 6 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '1rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 0
+                }}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
           </div>
 

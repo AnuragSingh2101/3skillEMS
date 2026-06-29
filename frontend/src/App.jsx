@@ -131,7 +131,7 @@ function App() {
               path="/dashboard" 
               element={
                 user && user.role === 'organizer' ? (
-                  <Dashboard token={token} backendUrl={BACKEND_URL} />
+                  <Dashboard user={user} token={token} backendUrl={BACKEND_URL} />
                 ) : (
                   <Navigate to="/login" />
                 )
