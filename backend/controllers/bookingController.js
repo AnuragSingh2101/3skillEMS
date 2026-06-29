@@ -3,12 +3,9 @@ const Booking = require('../models/Booking');
 const Event = require('../models/Event');
 const mockDb = require('../models/mockDb');
 
-// Helper to simulate Stripe Payment
 const processSimulatedPayment = async (amount, paymentMethodId) => {
-  // Simulate network latency
   await new Promise((resolve) => setTimeout(resolve, 800));
 
-  // Simulating payment logic
   if (paymentMethodId && paymentMethodId.startsWith('pm_card_chargeDeclined')) {
     throw new Error('Your card was declined.');
   }
@@ -20,9 +17,7 @@ const processSimulatedPayment = async (amount, paymentMethodId) => {
   };
 };
 
-// @desc    Create a booking (Ticket Booking & simulated Payment Integration)
-// @route   POST /api/bookings
-// @access  Private (Attendee only)
+
 exports.createBooking = async (req, res) => {
   try {
     const { eventId, ticketQuantity, paymentMethodId } = req.body;
@@ -57,7 +52,6 @@ exports.createBooking = async (req, res) => {
 
     const totalPrice = eventData.ticketPrice * qty;
 
-    // Simulate payment process (Payment Integration)
     let paymentResult;
     try {
       paymentResult = await processSimulatedPayment(totalPrice * 100, paymentMethodId || 'pm_card_visa');
@@ -65,13 +59,11 @@ exports.createBooking = async (req, res) => {
       return res.status(400).json({ success: false, message: `Payment Failed: ${paymentErr.message}` });
     }
 
-    // Generate QR Code URL
     const bookingIdTemp = isMock 
       ? 'booking_' + Math.random().toString(36).substr(2, 9) 
       : new Object().toString(); // Will overwrite below with actual DB id
 
-    // Generate base64 QR Code using the QR code package
-    // The QR code contains the booking ID, event title, and verification link
+
     const qrData = JSON.stringify({
       bookingId: bookingIdTemp,
       eventId: eventData._id,
@@ -118,7 +110,6 @@ exports.createBooking = async (req, res) => {
 
       return res.status(201).json({ success: true, data: responseData });
     } else {
-      // Create actual booking record in MongoDB
       const booking = new Booking({
         event: eventId,
         user: userId,
@@ -130,7 +121,6 @@ exports.createBooking = async (req, res) => {
         checkedIn: false
       });
 
-      // We need to generate the QR code with the actual Mongoose document ID
       const qrDataMongo = JSON.stringify({
         bookingId: booking._id.toString(),
         eventId: eventData._id.toString(),
@@ -158,9 +148,7 @@ exports.createBooking = async (req, res) => {
   }
 };
 
-// @desc    Get current user's bookings (Attendee perspective)
-// @route   GET /api/bookings/my
-// @access  Private (Attendee only)
+
 exports.getMyBookings = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
@@ -205,9 +193,7 @@ exports.getMyBookings = async (req, res) => {
   }
 };
 
-// @desc    Get booking details
-// @route   GET /api/bookings/:id
-// @access  Private
+
 exports.getBookingDetails = async (req, res) => {
   try {
     const bookingId = req.params.id;
@@ -269,9 +255,6 @@ exports.getBookingDetails = async (req, res) => {
   }
 };
 
-// @desc    QR Check-in scanner verification
-// @route   POST /api/bookings/:id/checkin
-// @access  Private (Organizer only)
 exports.checkInAttendee = async (req, res) => {
   try {
     const bookingId = req.params.id;
@@ -287,7 +270,6 @@ exports.checkInAttendee = async (req, res) => {
       const booking = mockDb.bookings[bookingIndex];
       const event = mockDb.events.find((e) => e._id === booking.event);
 
-      // Verify the checking-in user is the organizer of the event
       if (!event || event.organizer !== userId) {
         return res.status(403).json({
           success: false,

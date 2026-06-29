@@ -3,9 +3,7 @@ const Booking = require('../models/Booking');
 const mockDb = require('../models/mockDb');
 const mongoose = require('mongoose');
 
-// @desc    Get analytics for organizer dashboard
-// @route   GET /api/analytics
-// @access  Private (Organizer only)
+
 exports.getOrganizerAnalytics = async (req, res) => {
   try {
     const organizerId = req.user._id || req.user.id;
@@ -49,9 +47,7 @@ exports.getOrganizerAnalytics = async (req, res) => {
         value: categorySales[cat]
       }));
 
-      // Group revenue by date (last 7 days of sales)
       const salesByDate = {};
-      // Initialize last 7 days
       for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
@@ -149,7 +145,7 @@ exports.getOrganizerAnalytics = async (req, res) => {
         { $project: { name: '$_id', value: 1, _id: 0 } }
       ]);
 
-      // 3. Sales Trend (group bookings by date over last 7 days)
+      // 3. Sales Trend 
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -182,7 +178,6 @@ exports.getOrganizerAnalytics = async (req, res) => {
         };
       });
 
-      // Fill in empty dates if needed (or let UI do it, standard mapping is fine here)
 
       // 4. Detailed Event Breakdown
       const eventBreakdown = orgEvents.map((e) => {

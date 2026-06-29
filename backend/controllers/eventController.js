@@ -1,9 +1,7 @@
 const Event = require('../models/Event');
 const mockDb = require('../models/mockDb');
 
-// @desc    Get all events
-// @route   GET /api/events
-// @access  Public
+
 exports.getEvents = async (req, res) => {
   try {
     const { category, search } = req.query;
@@ -59,9 +57,7 @@ exports.getEvents = async (req, res) => {
   }
 };
 
-// @desc    Get single event
-// @route   GET /api/events/:id
-// @access  Public
+
 exports.getEvent = async (req, res) => {
   try {
     const isMock = process.env.USE_MOCK_DB === 'true';
@@ -94,9 +90,7 @@ exports.getEvent = async (req, res) => {
   }
 };
 
-// @desc    Create event
-// @route   POST /api/events
-// @access  Private (Organizer only)
+
 exports.createEvent = async (req, res) => {
   try {
     const { title, description, category, date, time, location, ticketPrice, capacity, bannerImage } = req.body;
@@ -150,9 +144,7 @@ exports.createEvent = async (req, res) => {
   }
 };
 
-// @desc    Update event
-// @route   PUT /api/events/:id
-// @access  Private (Organizer only)
+
 exports.updateEvent = async (req, res) => {
   try {
     const isMock = process.env.USE_MOCK_DB === 'true';
@@ -207,9 +199,7 @@ exports.updateEvent = async (req, res) => {
   }
 };
 
-// @desc    Delete event
-// @route   DELETE /api/events/:id
-// @access  Private (Organizer only)
+
 exports.deleteEvent = async (req, res) => {
   try {
     const isMock = process.env.USE_MOCK_DB === 'true';
@@ -224,14 +214,12 @@ exports.deleteEvent = async (req, res) => {
 
       const event = mockDb.events[eventIndex];
 
-      // Make sure user is event organizer
       if (event.organizer !== userId) {
         return res.status(403).json({ success: false, message: 'Not authorized to delete this event' });
       }
 
       mockDb.events.splice(eventIndex, 1);
       
-      // Also delete bookings related to this event
       mockDb.bookings = mockDb.bookings.filter(b => b.event !== eventId);
 
       return res.status(200).json({ success: true, message: 'Event deleted successfully' });
@@ -241,7 +229,6 @@ exports.deleteEvent = async (req, res) => {
         return res.status(404).json({ success: false, message: 'Event not found' });
       }
 
-      // Make sure user is event organizer
       if (event.organizer.toString() !== userId.toString()) {
         return res.status(403).json({ success: false, message: 'Not authorized to delete this event' });
       }

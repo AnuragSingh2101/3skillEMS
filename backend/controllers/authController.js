@@ -3,16 +3,13 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const mockDb = require('../models/mockDb');
 
-// Helper to generate JWT Token
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'supersecretjwtkeyforeventmanagementsystem123!', {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: '30d'
   });
 };
 
-// @desc    Register user
-// @route   POST /api/auth/register
-// @access  Public
+
 exports.registerUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -87,9 +84,7 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// @desc    Authenticate a user
-// @route   POST /api/auth/login
-// @access  Public
+
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -122,7 +117,6 @@ exports.loginUser = async (req, res) => {
         }
       });
     } else {
-      // Find user and include password field
       const user = await User.findOne({ email }).select('+password');
 
       if (user && (await user.matchPassword(password))) {
@@ -146,9 +140,7 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-// @desc    Get current user profile
-// @route   GET /api/auth/me
-// @access  Private
+
 exports.getMe = async (req, res) => {
   try {
     res.status(200).json({

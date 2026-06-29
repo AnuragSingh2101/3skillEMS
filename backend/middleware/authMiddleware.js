@@ -21,7 +21,6 @@ const protect = async (req, res, next) => {
         if (!user) {
           return res.status(401).json({ success: false, message: 'Not authorized, user not found' });
         }
-        // Exclude password
         const { password, ...userWithoutPassword } = user;
         req.user = userWithoutPassword;
       } else {
@@ -40,7 +39,6 @@ const protect = async (req, res, next) => {
   }
 };
 
-// Grant access to specific roles
 const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
