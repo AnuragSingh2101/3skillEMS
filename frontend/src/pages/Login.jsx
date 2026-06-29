@@ -112,12 +112,6 @@ const Login = ({ onLoginSuccess, backendUrl }) => {
             Sign Up
           </Link>
         </div>
-
-        <div className="glass-card" style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(255, 255, 255, 0.02)', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-          <p style={{ fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Demo Accounts:</p>
-          <p>🎟️ Attendee: <code>attendee@evently.com</code> / <code>password123</code></p>
-          <p>💼 Organizer: <code>organizer@evently.com</code> / <code>password123</code></p>
-        </div>
       </div>
     </div>
   );
