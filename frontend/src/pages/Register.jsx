@@ -2,6 +2,47 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, Lock, UserPlus, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
+const validateEmail = (emailStr) => {
+  // 1. Basic format validation
+  const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!regex.test(emailStr)) return false;
+
+  const domainText = emailStr.split('@')[1].toLowerCase();
+  
+  // 2. Reject common fake provider variations (e.g., gmailXXXX, yahooXXXX)
+  const commonProviders = ['gmail', 'yahoo', 'hotmail', 'outlook', 'icloud', 'protonmail', 'proton'];
+  for (const provider of commonProviders) {
+    if (domainText.includes(provider)) {
+      const isExact = domainText === `${provider}.com` || 
+                      domainText === `${provider}.co` || 
+                      domainText.endsWith(`.${provider}.com`) || 
+                      domainText.endsWith(`.${provider}.co`) || 
+                      domainText.endsWith(`.${provider}.org`) || 
+                      domainText === `${provider}.co.in` || 
+                      domainText === `${provider}.net` ||
+                      domainText === `${provider}.me` ||
+                      domainText === `${provider}.org`;
+      if (!isExact) {
+        return false;
+      }
+    }
+  }
+
+  // 3. Reject obviously random domains (e.g., domains containing 4 or more consecutive digits)
+  if (/\d{4,}/.test(domainText)) {
+    return false;
+  }
+
+  // 4. Require a valid TLD (alphabetic only, length 2 to 6)
+  const parts = domainText.split('.');
+  const tld = parts[parts.length - 1];
+  if (!/^[a-z]{2,6}$/.test(tld)) {
+    return false;
+  }
+
+  return true;
+};
+
 const Register = ({ onLoginSuccess, backendUrl }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -12,46 +53,7 @@ const Register = ({ onLoginSuccess, backendUrl }) => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  const validateEmail = (emailStr) => {
-    // 1. Basic format validation
-    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!regex.test(emailStr)) return false;
 
-    const domainText = emailStr.split('@')[1].toLowerCase();
-    
-    // 2. Reject common fake provider variations (e.g., gmailXXXX, yahooXXXX)
-    const commonProviders = ['gmail', 'yahoo', 'hotmail', 'outlook', 'icloud', 'protonmail', 'proton'];
-    for (const provider of commonProviders) {
-      if (domainText.includes(provider)) {
-        const isExact = domainText === `${provider}.com` || 
-                        domainText === `${provider}.co` || 
-                        domainText.endsWith(`.${provider}.com`) || 
-                        domainText.endsWith(`.${provider}.co`) || 
-                        domainText.endsWith(`.${provider}.org`) || 
-                        domainText === `${provider}.co.in` || 
-                        domainText === `${provider}.net` ||
-                        domainText === `${provider}.me` ||
-                        domainText === `${provider}.org`;
-        if (!isExact) {
-          return false;
-        }
-      }
-    }
-
-    // 3. Reject obviously random domains (e.g., domains containing 4 or more consecutive digits)
-    if (/\d{4,}/.test(domainText)) {
-      return false;
-    }
-
-    // 4. Require a valid TLD (alphabetic only, length 2 to 6)
-    const parts = domainText.split('.');
-    const tld = parts[parts.length - 1];
-    if (!/^[a-z]{2,6}$/.test(tld)) {
-      return false;
-    }
-
-    return true;
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -209,7 +209,7 @@ const Dashboard = ({ user, backendUrl }) => {
             <span style={{
               background: 'rgba(168, 85, 247, 0.15)',
               color: '#c084fc',
-              fontSize: '0.7rem',
+              fontSize: '0.75rem',
               fontWeight: 600,
               padding: '0.15rem 0.6rem',
               borderRadius: '20px',
@@ -324,8 +324,8 @@ const Dashboard = ({ user, backendUrl }) => {
 
             {/* X Axis Date Labels */}
             <div className="bar-chart-x-axis">
-              {salesTrend.map((item, idx) => (
-                <span key={idx} style={{ flex: 1, textAlign: 'center' }}>{item.date}</span>
+              {salesTrend.map((item) => (
+                <span key={item.date} style={{ flex: 1, textAlign: 'center' }}>{item.date}</span>
               ))}
             </div>
           </div>

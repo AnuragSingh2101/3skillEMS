@@ -2,6 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { Scan, ShieldAlert, CheckCircle, AlertTriangle, Key } from 'lucide-react';
 
+const onScanFailure = (error) => {
+  // This callback triggers frequently for every frame where no QR code is found
+  // We suppress logging to avoid flooding the console
+};
+
 const CheckIn = ({ backendUrl }) => {
   const [scanResult, setScanResult] = useState(null);
   const [scanError, setScanError] = useState('');
@@ -55,11 +60,6 @@ const CheckIn = ({ backendUrl }) => {
         setScanError('Failed to decode scanned QR text: ' + decodedText);
       }
     }
-  };
-
-  const onScanFailure = (error) => {
-    // This callback triggers frequently for every frame where no QR code is found
-    // We suppress logging to avoid flooding the console
   };
 
   const handleManualSubmit = async (e) => {
