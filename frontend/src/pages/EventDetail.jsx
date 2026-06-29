@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Calendar, MapPin, Users, Ticket, ArrowLeft, Plus, Minus, CreditCard, ShieldCheck } from 'lucide-react';
 
-const EventDetail = ({ user, token, backendUrl }) => {
+const EventDetail = ({ user, backendUrl }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   
@@ -61,9 +61,9 @@ const EventDetail = ({ user, token, backendUrl }) => {
       const response = await fetch(`${backendUrl}/api/events/${id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({
           bannerImage: newBannerUrl
         })
@@ -133,9 +133,9 @@ const EventDetail = ({ user, token, backendUrl }) => {
       const response = await fetch(`${backendUrl}/api/bookings`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({
           eventId: event._id,
           ticketQuantity: quantity,

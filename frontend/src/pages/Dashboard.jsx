@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, Ticket, Users, Calendar, Plus, X, BarChart3, PieChart, TrendingUp, Sparkles } from 'lucide-react';
 
-const Dashboard = ({ user, token, backendUrl }) => {
+const Dashboard = ({ user, backendUrl }) => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -49,9 +49,7 @@ const Dashboard = ({ user, token, backendUrl }) => {
       setLoading(true);
       setError('');
       const response = await fetch(`${backendUrl}/api/analytics`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
       const data = await response.json();
 
@@ -77,9 +75,9 @@ const Dashboard = ({ user, token, backendUrl }) => {
       const response = await fetch(`${backendUrl}/api/events`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({
           title,
           description,

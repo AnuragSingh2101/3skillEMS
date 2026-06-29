@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { Scan, ShieldAlert, CheckCircle, AlertTriangle, Key } from 'lucide-react';
 
-const CheckIn = ({ token, backendUrl }) => {
+const CheckIn = ({ backendUrl }) => {
   const [scanResult, setScanResult] = useState(null);
   const [scanError, setScanError] = useState('');
   const [manualBookingId, setManualBookingId] = useState('');
@@ -77,9 +77,9 @@ const CheckIn = ({ token, backendUrl }) => {
       const response = await fetch(`${backendUrl}/api/bookings/${bookingId}/checkin`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
       });
 
       const data = await response.json();

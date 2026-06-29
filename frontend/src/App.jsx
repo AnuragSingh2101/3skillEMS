@@ -12,18 +12,13 @@ import CheckIn from './pages/CheckIn';
 const BACKEND_URL = 'http://localhost:5001';
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
-    if (token) {
-      fetchCurrentUser();
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
+    fetchCurrentUser();
+  }, []);
 
   useEffect(() => {
     document.body.className = theme;
@@ -49,34 +44,34 @@ function App() {
   const fetchCurrentUser = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
       const data = await response.json();
       if (response.ok) {
         setUser(data.user);
       } else {
-        // Token expired/invalid, clear session
-        handleLogout();
+        setUser(null);
       }
     } catch (err) {
       console.error('Failed to authenticate token with server:', err);
-      // Keep session local but stop loading, let request retries handle fail
     } finally {
       setLoading(false);
     }
   };
 
   const handleLoginSuccess = (newToken, newUserObj) => {
-    localStorage.setItem('token', newToken);
-    setToken(newToken);
     setUser(newUserObj);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setToken('');
+  const handleLogout = async () => {
+    try {
+      await fetch(`${BACKEND_URL}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (err) {
+      console.error('Logout request failed:', err);
+    }
     setUser(null);
   };
 
@@ -111,7 +106,7 @@ function App() {
             
             <Route 
               path="/event/:id" 
-              element={<EventDetail user={user} token={token} backendUrl={BACKEND_URL} />} 
+              element={<EventDetail user={user} backendUrl={BACKEND_URL} />} 
             />
             
             {/* Attendee Protected Routes */}
@@ -119,7 +114,7 @@ function App() {
               path="/my-tickets" 
               element={
                 user && user.role === 'attendee' ? (
-                  <MyTickets token={token} backendUrl={BACKEND_URL} />
+                  <MyTickets backendUrl={BACKEND_URL} />
                 ) : (
                   <Navigate to="/login" />
                 )
@@ -131,7 +126,7 @@ function App() {
               path="/dashboard" 
               element={
                 user && user.role === 'organizer' ? (
-                  <Dashboard user={user} token={token} backendUrl={BACKEND_URL} />
+                  <Dashboard user={user} backendUrl={BACKEND_URL} />
                 ) : (
                   <Navigate to="/login" />
                 )
@@ -142,7 +137,7 @@ function App() {
               path="/check-in" 
               element={
                 user && user.role === 'organizer' ? (
-                  <CheckIn token={token} backendUrl={BACKEND_URL} />
+                  <CheckIn backendUrl={BACKEND_URL} />
                 ) : (
                   <Navigate to="/login" />
                 )

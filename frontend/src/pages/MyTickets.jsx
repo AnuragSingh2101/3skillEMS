@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Ticket, Calendar, MapPin, Scan, CheckCircle, Info } from 'lucide-react';
 
-const MyTickets = ({ token, backendUrl }) => {
+const MyTickets = ({ backendUrl }) => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -16,9 +16,7 @@ const MyTickets = ({ token, backendUrl }) => {
       setLoading(true);
       setError('');
       const response = await fetch(`${backendUrl}/api/bookings/my`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
       const data = await response.json();
 
