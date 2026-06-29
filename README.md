@@ -38,15 +38,6 @@ npm run dev
 
 ## Technical Setup & Database Connection
 
-By default, the server is configured to connect to your local MongoDB service at `mongodb://localhost:27017/event-management`. 
-
-- **Automatic Failover Mode**: If your MongoDB server is offline or fails to connect, the server automatically boots using an **IN-MEMORY DATA STORE** to prevent server crashes. 
 - **Environment config**: To customize ports, DB connections, or add Stripe keys, adjust the fields inside `backend/.env`.
 
 ---
-
-## Test Accounts
-
-Use these pre-loaded accounts (password: `password123`) to explore the system:
-- 🎟️ **Attendee account**: `attendee@evently.com`
-- 💼 **Organizer account**: `organizer@evently.com`
