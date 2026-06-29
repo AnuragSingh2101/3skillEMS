@@ -9,6 +9,13 @@ const EventDetail = ({ user, token, backendUrl }) => {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Edit Banner State
+  const [isEditBannerOpen, setIsEditBannerOpen] = useState(false);
+  const [bannerUploadMode, setBannerUploadMode] = useState('upload'); // 'upload' or 'url'
+  const [newBannerUrl, setNewBannerUrl] = useState('');
+  const [updatingBanner, setUpdatingBanner] = useState(false);
+  const [bannerUpdateError, setBannerUpdateError] = useState('');
   
   // Checkout Modal State
   const [quantity, setQuantity] = useState(1);
@@ -43,6 +50,58 @@ const EventDetail = ({ user, token, backendUrl }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleUpdateBanner = async (e) => {
+    e.preventDefault();
+    setUpdatingBanner(true);
+    setBannerUpdateError('');
+
+    try {
+      const response = await fetch(`${backendUrl}/api/events/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          bannerImage: newBannerUrl
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setEvent(prev => ({ ...prev, bannerImage: data.data.bannerImage }));
+        setIsEditBannerOpen(false);
+      } else {
+        setBannerUpdateError(data.message || 'Failed to update banner image.');
+      }
+    } catch (err) {
+      console.error(err);
+      setBannerUpdateError('Connection error. Failed to update banner.');
+    } finally {
+      setUpdatingBanner(false);
+    }
+  };
+
+  const handleBannerFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 8 * 1024 * 1024) {
+      setBannerUpdateError('File is too large. Max size is 8MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewBannerUrl(reader.result);
+    };
+    reader.onerror = () => {
+      setBannerUpdateError('Error reading file. Please try again.');
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleIncrement = () => {
@@ -131,13 +190,32 @@ const EventDetail = ({ user, token, backendUrl }) => {
 
   const ticketsLeft = event.capacity - event.ticketsSold;
 
+  const isOrganizer = user && event && event.organizer && (
+    typeof event.organizer === 'object' 
+      ? event.organizer._id === user.id || event.organizer._id === user._id
+      : event.organizer === user.id || event.organizer === user._id
+  );
+
   return (
     <div>
-      <div className="mb-6">
+      <div className="mb-6" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <Link to="/" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
           <ArrowLeft size={16} />
           <span>Explore Events</span>
         </Link>
+        {isOrganizer && (
+          <button
+            onClick={() => {
+              setNewBannerUrl(event.bannerImage || '');
+              setBannerUpdateError('');
+              setIsEditBannerOpen(true);
+            }}
+            className="btn btn-primary"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <span>Edit Banner Image</span>
+          </button>
+        )}
       </div>
 
       <div className="detail-hero">
@@ -150,7 +228,7 @@ const EventDetail = ({ user, token, backendUrl }) => {
           <span className={`badge badge-${event.category.toLowerCase()} mb-4`} style={{ width: 'fit-content', padding: '0.4rem 1rem', fontSize: '0.85rem' }}>
             {event.category}
           </span>
-          <h1 style={{ fontSize: '3rem', color: '#fff', marginBottom: '0.5rem' }}>{event.title}</h1>
+          <h1 style={{ fontSize: '3rem', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>{event.title}</h1>
           <p style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Calendar size={16} />
             <span>{eventDate} • {event.time}</span>
@@ -188,6 +266,20 @@ const EventDetail = ({ user, token, backendUrl }) => {
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{eventDate} at {event.time}</p>
               </div>
             </div>
+
+            {event.organizer && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ background: 'var(--primary-glow)', padding: '0.75rem', borderRadius: '50%', color: 'var(--primary)' }}>
+                  <Users size={20} />
+                </div>
+                <div>
+                  <p style={{ fontWeight: 600 }}>Host/Organizer</p>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                    {typeof event.organizer === 'object' ? event.organizer.name : 'Unknown Organizer'}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -197,7 +289,7 @@ const EventDetail = ({ user, token, backendUrl }) => {
           
           <div className="flex-between mb-4">
             <span style={{ color: 'var(--text-secondary)' }}>Ticket Price</span>
-            <span style={{ fontSize: '2rem', fontWeight: 800, color: '#fff', fontFamily: 'var(--font-display)' }}>
+            <span style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
               {event.ticketPrice === 0 ? 'Free' : `$${event.ticketPrice}`}
             </span>
           </div>
@@ -405,6 +497,104 @@ const EventDetail = ({ user, token, backendUrl }) => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Edit Banner Modal */}
+      {isEditBannerOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '500px' }}>
+            <button
+              onClick={() => setIsEditBannerOpen(false)}
+              className="modal-close"
+            >
+              ✕
+            </button>
+            
+            <h3 className="mb-4" style={{ fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>Edit Banner Image</span>
+            </h3>
+
+            {bannerUpdateError && (
+              <div className="glass-card mb-4" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)', color: 'var(--danger)', padding: '0.75rem 1rem' }}>
+                <p style={{ fontSize: '0.85rem' }}>{bannerUpdateError}</p>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+              <button
+                type="button"
+                className={`btn ${bannerUploadMode === 'upload' ? 'btn-primary' : 'btn-outline'}`}
+                style={{ flex: 1, padding: '0.5rem' }}
+                onClick={() => setBannerUploadMode('upload')}
+              >
+                Upload File
+              </button>
+              <button
+                type="button"
+                className={`btn ${bannerUploadMode === 'url' ? 'btn-primary' : 'btn-outline'}`}
+                style={{ flex: 1, padding: '0.5rem' }}
+                onClick={() => setBannerUploadMode('url')}
+              >
+                Image URL
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateBanner}>
+              {bannerUploadMode === 'upload' ? (
+                <div className="form-group mb-6">
+                  <label className="form-label">Upload Image from Computer</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleBannerFileChange}
+                    className="form-input"
+                    style={{ padding: '0.5rem' }}
+                  />
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                    Supported formats: JPEG, PNG, WEBP. Max size: 8MB.
+                  </p>
+                </div>
+              ) : (
+                <div className="form-group mb-6">
+                  <label className="form-label">Image URL</label>
+                  <input
+                    type="url"
+                    value={newBannerUrl && newBannerUrl.startsWith('data:') ? '' : newBannerUrl}
+                    onChange={(e) => setNewBannerUrl(e.target.value)}
+                    placeholder="https://images.unsplash.com/photo-..."
+                    className="form-input"
+                  />
+                </div>
+              )}
+
+              {newBannerUrl && (
+                <div className="mb-6">
+                  <p className="form-label">Preview</p>
+                  <div style={{ width: '100%', height: '180px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--surface-border)' }}>
+                    <img
+                      src={newBannerUrl}
+                      alt="Banner Preview"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="btn btn-primary"
+                style={{ width: '100%', padding: '0.9rem' }}
+                disabled={updatingBanner || !newBannerUrl}
+              >
+                {updatingBanner ? (
+                  <div className="spinner"></div>
+                ) : (
+                  <span>Save Banner Image</span>
+                )}
+              </button>
+            </form>
           </div>
         </div>
       )}

@@ -29,7 +29,16 @@ exports.getEvents = async (req, res) => {
       // Sort by date ascending
       filteredEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-      return res.status(200).json({ success: true, count: filteredEvents.length, data: filteredEvents });
+      // Populate mock organizer
+      const populatedEvents = filteredEvents.map((e) => {
+        const org = mockDb.users.find((u) => u._id === e.organizer);
+        return {
+          ...e,
+          organizer: org ? { _id: org._id, name: org.name, email: org.email } : null
+        };
+      });
+
+      return res.status(200).json({ success: true, count: populatedEvents.length, data: populatedEvents });
     } else {
       let queryObj = {};
 

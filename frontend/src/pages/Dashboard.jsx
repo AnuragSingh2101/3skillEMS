@@ -17,8 +17,28 @@ const Dashboard = ({ user, token, backendUrl }) => {
   const [ticketPrice, setTicketPrice] = useState('0');
   const [capacity, setCapacity] = useState('100');
   const [bannerImage, setBannerImage] = useState('');
+  const [bannerInputMode, setBannerInputMode] = useState('upload'); // 'upload' or 'url'
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
+
+  const handleCreateBannerFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 8 * 1024 * 1024) {
+      setFormError('File is too large. Max size is 8MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setBannerImage(reader.result);
+    };
+    reader.onerror = () => {
+      setFormError('Error reading file.');
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     fetchAnalytics();
@@ -87,6 +107,7 @@ const Dashboard = ({ user, token, backendUrl }) => {
         setTicketPrice('0');
         setCapacity('100');
         setBannerImage('');
+        setBannerInputMode('upload');
         // Refresh dashboard metrics
         fetchAnalytics();
       } else {
@@ -534,16 +555,64 @@ const Dashboard = ({ user, token, backendUrl }) => {
                 </div>
               </div>
 
-              <div className="form-group mb-6">
-                <label className="form-label">Banner Image URL (Unsplash Link)</label>
-                <input
-                  type="url"
-                  className="form-input"
-                  placeholder="https://images.unsplash.com/photo-..."
-                  value={bannerImage}
-                  onChange={(e) => setBannerImage(e.target.value)}
-                />
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                <button
+                  type="button"
+                  className={`btn ${bannerInputMode === 'upload' ? 'btn-primary' : 'btn-outline'}`}
+                  style={{ flex: 1, padding: '0.4rem', fontSize: '0.85rem' }}
+                  onClick={() => setBannerInputMode('upload')}
+                >
+                  Upload File
+                </button>
+                <button
+                  type="button"
+                  className={`btn ${bannerInputMode === 'url' ? 'btn-primary' : 'btn-outline'}`}
+                  style={{ flex: 1, padding: '0.4rem', fontSize: '0.85rem' }}
+                  onClick={() => setBannerInputMode('url')}
+                >
+                  Image URL
+                </button>
               </div>
+
+              {bannerInputMode === 'upload' ? (
+                <div className="form-group mb-6">
+                  <label className="form-label">Upload Banner Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleCreateBannerFileChange}
+                    className="form-input"
+                    style={{ padding: '0.5rem' }}
+                  />
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                    Supported formats: JPEG, PNG, WEBP. Max size: 8MB.
+                  </p>
+                </div>
+              ) : (
+                <div className="form-group mb-6">
+                  <label className="form-label">Banner Image URL</label>
+                  <input
+                    type="url"
+                    className="form-input"
+                    placeholder="https://images.unsplash.com/photo-..."
+                    value={bannerImage && bannerImage.startsWith('data:') ? '' : bannerImage}
+                    onChange={(e) => setBannerImage(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {bannerImage && (
+                <div className="mb-6">
+                  <p className="form-label">Banner Preview</p>
+                  <div style={{ width: '100%', height: '140px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--surface-border)' }}>
+                    <img
+                      src={bannerImage}
+                      alt="Banner Preview"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </div>
+                </div>
+              )}
 
               <button
                 type="submit"

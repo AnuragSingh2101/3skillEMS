@@ -28,11 +28,17 @@ const EventCard = ({ event }) => {
       </div>
 
       <div className="card-content">
-        <h3 className="mb-4">
+        <h3 style={{ marginBottom: '0.25rem' }}>
           <Link to={`/event/${_id}`} className="card-title">
             {title}
           </Link>
         </h3>
+        <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '1rem', display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+          <span>by</span>
+          <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>
+            {event.organizer && (typeof event.organizer === 'object' ? event.organizer.name : 'Unknown')}
+          </span>
+        </p>
 
         <div className="card-info">
           <Calendar size={14} />
