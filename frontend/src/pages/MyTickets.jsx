@@ -101,8 +101,8 @@ const MyTickets = ({ token, backendUrl }) => {
                 {/* Ticket Details Info */}
                 <div className="ticket-info">
                   <div className="flex-between mb-4">
-                    <span className={`badge badge-${event.category.toLowerCase()}`}>
-                      {event.category}
+                    <span className={`badge badge-${(event.category || 'Other').toLowerCase()}`}>
+                      {event.category || 'Other'}
                     </span>
                     
                     {checkedIn ? (

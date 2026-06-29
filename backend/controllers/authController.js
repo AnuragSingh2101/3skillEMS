@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
-const mockDb = require('../models/mockDb');
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -64,65 +63,31 @@ exports.registerUser = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please enter a valid, original email address (e.g. name@gmail.com). Disposable or fake domains are not allowed.' });
     }
 
-    const isMock = process.env.USE_MOCK_DB === 'true';
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ success: false, message: 'User already exists' });
+    }
 
-    if (isMock) {
-      const userExists = mockDb.users.some(u => u.email.toLowerCase() === email.toLowerCase());
-      if (userExists) {
-        return res.status(400).json({ success: false, message: 'User already exists' });
-      }
+    const user = await User.create({
+      name,
+      email,
+      password,
+      role: role || 'attendee'
+    });
 
-      const salt = bcrypt.genSaltSync(10);
-      const hashedPassword = bcrypt.hashSync(password, salt);
-
-      const newUser = {
-        _id: 'user_' + Math.random().toString(36).substr(2, 9),
-        name,
-        email,
-        password: hashedPassword,
-        role: role || 'attendee',
-        createdAt: new Date()
-      };
-
-      mockDb.users.push(newUser);
-
+    if (user) {
       return res.status(201).json({
         success: true,
-        token: generateToken(newUser._id),
+        token: generateToken(user._id),
         user: {
-          id: newUser._id,
-          name: newUser.name,
-          email: newUser.email,
-          role: newUser.role
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role
         }
       });
     } else {
-      const userExists = await User.findOne({ email });
-      if (userExists) {
-        return res.status(400).json({ success: false, message: 'User already exists' });
-      }
-
-      const user = await User.create({
-        name,
-        email,
-        password,
-        role: role || 'attendee'
-      });
-
-      if (user) {
-        return res.status(201).json({
-          success: true,
-          token: generateToken(user._id),
-          user: {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role
-          }
-        });
-      } else {
-        return res.status(400).json({ success: false, message: 'Invalid user data' });
-      }
+      return res.status(400).json({ success: false, message: 'Invalid user data' });
     }
   } catch (error) {
     console.error(error);
@@ -139,19 +104,9 @@ exports.loginUser = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide email and password' });
     }
 
-    const isMock = process.env.USE_MOCK_DB === 'true';
+    const user = await User.findOne({ email }).select('+password');
 
-    if (isMock) {
-      const user = mockDb.users.find(u => u.email.toLowerCase() === email.toLowerCase());
-      if (!user) {
-        return res.status(401).json({ success: false, message: 'Invalid credentials' });
-      }
-
-      const isMatch = bcrypt.compareSync(password, user.password);
-      if (!isMatch) {
-        return res.status(401).json({ success: false, message: 'Invalid credentials' });
-      }
-
+    if (user && (await user.matchPassword(password))) {
       return res.status(200).json({
         success: true,
         token: generateToken(user._id),
@@ -163,22 +118,7 @@ exports.loginUser = async (req, res) => {
         }
       });
     } else {
-      const user = await User.findOne({ email }).select('+password');
-
-      if (user && (await user.matchPassword(password))) {
-        return res.status(200).json({
-          success: true,
-          token: generateToken(user._id),
-          user: {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role
-          }
-        });
-      } else {
-        return res.status(401).json({ success: false, message: 'Invalid credentials' });
-      }
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
   } catch (error) {
     console.error(error);
